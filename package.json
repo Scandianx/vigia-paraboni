@@ -1,0 +1,17 @@
+{
+  "name": "paraboni-windows-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monitor leve para diagnosticar travamentos de servicos Node e Tomcat em Windows Server.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "check-config": "node src/index.js --check-config",
+    "discover": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/discover-processes.ps1",
+    "preflight": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/preflight.ps1",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
