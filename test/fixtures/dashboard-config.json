@@ -1,0 +1,29 @@
+{
+  "storage": {
+    "directory": ".\\dashboard-data",
+    "retentionDays": 14
+  },
+  "targets": [
+    {
+      "id": "node-index",
+      "label": "Node index.js",
+      "processNames": ["node.exe"],
+      "commandLineIncludes": ["index.js"],
+      "healthChecks": []
+    },
+    {
+      "id": "node-new-index",
+      "label": "Node newIndex.js",
+      "processNames": ["node.exe"],
+      "commandLineIncludes": ["newIndex.js"],
+      "healthChecks": []
+    },
+    {
+      "id": "tomcat",
+      "label": "Tomcat 10.1",
+      "processNames": ["java.exe"],
+      "commandLineIncludes": ["catalina.base"],
+      "healthChecks": []
+    }
+  ]
+}

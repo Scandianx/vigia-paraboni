@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Vigia Paraboni</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Ir para o conteúdo</a>
+
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-mark" aria-hidden="true">VP</div>
+        <div>
+          <h1>Vigia Paraboni</h1>
+          <p>Diagnóstico local do servidor</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="live-status" id="liveStatus" role="status" aria-live="polite">
+          <span class="status-indicator" aria-hidden="true"></span>
+          <span id="liveStatusText">Carregando</span>
+        </div>
+        <button class="ui-button ui-button-subtle" id="themeButton" type="button">Alternar tema</button>
+        <button class="ui-button ui-button-primary" id="refreshButton" type="button">Atualizar</button>
+      </div>
+    </header>
+
+    <main id="main-content" class="dashboard-shell">
+      <section class="toolbar" aria-label="Filtros do painel">
+        <label class="control-field">
+          <span>Período</span>
+          <select id="rangeSelect">
+            <option value="3600000">Última hora</option>
+            <option value="21600000" selected>Últimas 6 horas</option>
+            <option value="86400000">Últimas 24 horas</option>
+            <option value="604800000">Últimos 7 dias</option>
+          </select>
+        </label>
+        <label class="switch-field">
+          <span>Atualização automática</span>
+          <input class="ui-switch" id="autoRefresh" type="checkbox" role="switch" checked aria-label="Atualização automática">
+        </label>
+        <p class="toolbar-note" id="rangeNote">Aguardando dados do monitor</p>
+      </section>
+
+      <div id="errorState" class="message-state error-state" hidden role="alert">
+        <strong>Não foi possível carregar os dados.</strong>
+        <span id="errorMessage">Verifique se o monitor já criou arquivos em data\samples.</span>
+      </div>
+
+      <div id="loadingState" class="loading-state" aria-live="polite">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton-grid">
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        </div>
+        <div class="skeleton skeleton-chart"></div>
+      </div>
+
+      <div id="emptyState" class="message-state empty-state" hidden>
+        <strong>Ainda não há amostras neste período.</strong>
+        <span>Inicie o monitor com npm start e aguarde a primeira coleta.</span>
+      </div>
+
+      <div id="dashboardContent" hidden>
+        <section class="metric-strip" aria-label="Resumo do servidor">
+          <article class="metric-block">
+            <span>CPU agora</span>
+            <strong id="metricCpu">-</strong>
+            <small id="metricCpuContext">Sem leitura</small>
+          </article>
+          <article class="metric-block">
+            <span>Memória disponível</span>
+            <strong id="metricMemory">-</strong>
+            <small id="metricMemoryContext">Sem leitura</small>
+          </article>
+          <article class="metric-block">
+            <span>Fila de disco</span>
+            <strong id="metricDisk">-</strong>
+            <small id="metricDiskContext">Sem leitura</small>
+          </article>
+          <article class="metric-block">
+            <span>Amostras</span>
+            <strong id="metricSamples">0</strong>
+            <small id="metricSamplesContext">No período</small>
+          </article>
+        </section>
+
+        <section class="chart-section" aria-labelledby="serverChartTitle">
+          <div class="section-heading">
+            <div>
+              <h2 id="serverChartTitle">Servidor</h2>
+              <p>CPU e memória disponível ao longo do período.</p>
+            </div>
+            <div class="chart-legend" aria-label="Legenda">
+              <span><i class="legend-swatch swatch-cpu"></i>CPU</span>
+              <span><i class="legend-swatch swatch-memory"></i>Memória disponível</span>
+            </div>
+          </div>
+          <div class="chart-frame">
+            <canvas id="systemChart" role="img" aria-label="Gráfico de CPU e memória disponível do servidor"></canvas>
+            <div class="chart-tooltip" id="systemTooltip" hidden></div>
+          </div>
+        </section>
+
+        <section class="chart-section" aria-labelledby="processChartTitle">
+          <div class="section-heading process-heading">
+            <div>
+              <h2 id="processChartTitle">Processos monitorados</h2>
+              <p>Comparação entre Node, Tomcat e outros targets configurados.</p>
+            </div>
+            <label class="control-field compact-control">
+              <span>Métrica</span>
+              <select id="targetMetric">
+                <option value="cpuPercent" selected>CPU (%)</option>
+                <option value="privateMemoryMb">Memória privada (MB)</option>
+              </select>
+            </label>
+          </div>
+          <div class="chart-frame">
+            <canvas id="targetChart" role="img" aria-label="Gráfico dos processos monitorados"></canvas>
+            <div class="chart-tooltip" id="targetTooltip" hidden></div>
+          </div>
+          <div class="chart-legend target-legend" id="targetLegend" aria-label="Legenda dos processos"></div>
+        </section>
+
+        <section class="data-section" aria-labelledby="targetsTitle">
+          <div class="section-heading">
+            <div>
+              <h2 id="targetsTitle">Estado dos processos</h2>
+              <p>Resumo calculado para o período selecionado.</p>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Processo</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">PIDs</th>
+                  <th scope="col">CPU média</th>
+                  <th scope="col">CPU máxima</th>
+                  <th scope="col">Memória máxima</th>
+                  <th scope="col">Disponibilidade</th>
+                </tr>
+              </thead>
+              <tbody id="targetsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="data-section incidents-section" aria-labelledby="incidentsTitle">
+          <div class="section-heading">
+            <div>
+              <h2 id="incidentsTitle">Incidentes</h2>
+              <p>Ocorrências abertas automaticamente pelos gatilhos do monitor.</p>
+            </div>
+            <span class="count-label" id="incidentCount">0 ocorrências</span>
+          </div>
+          <div id="incidentsList" class="incidents-list"></div>
+          <div id="noIncidents" class="inline-empty" hidden>Nenhum incidente registrado.</div>
+        </section>
+
+        <section class="data-section" aria-labelledby="samplesTitle">
+          <div class="section-heading">
+            <div>
+              <h2 id="samplesTitle">Amostras recentes</h2>
+              <p>Últimos pontos agregados exibidos nos gráficos.</p>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Horário</th>
+                  <th scope="col">CPU</th>
+                  <th scope="col">Memória disponível</th>
+                  <th scope="col">Fila de disco</th>
+                  <th scope="col">Paginação</th>
+                </tr>
+              </thead>
+              <tbody id="samplesTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <dialog id="incidentDialog" class="incident-dialog" aria-labelledby="incidentDialogTitle">
+      <div class="dialog-header">
+        <div>
+          <span class="dialog-label">Detalhes do incidente</span>
+          <h2 id="incidentDialogTitle">Incidente</h2>
+        </div>
+        <button class="ui-button ui-button-subtle" id="closeDialog" type="button">Fechar</button>
+      </div>
+      <div id="incidentDialogContent" class="dialog-content"></div>
+    </dialog>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

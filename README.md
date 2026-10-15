@@ -56,6 +56,38 @@ Os dados serão gravados em `data\samples` e os incidentes em `data\incidents`.
 
 Se o preflight acusar indisponibilidade de CIM, execute-o primeiro em PowerShell elevado. O monitor continua vivo quando uma fonte falha e registra `collectorWarnings`, mas não há diagnóstico confiável enquanto os contadores essenciais estiverem indisponíveis.
 
+## Painel local
+
+Com o monitor coletando dados, inicie o painel em outro PowerShell:
+
+```powershell
+npm run dashboard
+```
+
+Abra no navegador do próprio servidor:
+
+```text
+http://127.0.0.1:3876
+```
+
+O painel oferece:
+
+- períodos de 1 hora, 6 horas, 24 horas e 7 dias;
+- atualização automática a cada 15 segundos;
+- gráficos de CPU e memória do servidor;
+- comparação de CPU e memória privada entre os processos;
+- estado, PID e disponibilidade de cada target;
+- histórico dos incidentes e download dos arquivos de diagnóstico;
+- tema claro e escuro.
+
+Por padrão, o servidor escuta somente em `127.0.0.1`. Para usar outra porta:
+
+```powershell
+npm run dashboard -- --port=4000
+```
+
+Não exponha o painel diretamente na rede. Os arquivos de incidente podem conter informações internas do servidor.
+
 ## Como identificar Node e Tomcat
 
 Um target pode ser identificado de três formas:
